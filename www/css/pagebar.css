@@ -1,0 +1,30 @@
+span#pagepre{
+  padding : 10px 10px 8px 10px;
+  background : url(../img/cms_ctrl.gif) no-repeat left center ;
+}
+span#pagepre a{
+  font-weight: bold;
+  color: #FFF;
+  text-decoration: none;
+}
+span#pagenext{
+  padding:10px 18px 10px 8px;
+  background:url(../img/cms_ctrl.gif) no-repeat right center ;
+}
+span#pagenext a{
+  font-weight: bold;
+  color: #FFF;
+  text-decoration: none;
+}
+span#pagebar a{
+  margin:0px;
+  padding:7px;
+  font-weight:bold;
+  border:1px solid #369;
+  text-decoration:none;
+  background-color: white;
+}
+
+span#pagebar a[selected]{
+  background-color: rgb(64,64,64);
+}

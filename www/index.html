@@ -1,201 +1,136 @@
 <!DOCTYPE html>
-<!--
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-     KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
--->
 <html>
     <head>
-        <!--
-        Customize this policy to fit your own app's needs. For more guidance, see:
-            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
-        Some notes:
-            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
-            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
-            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
-                * Enable inline JS: add 'unsafe-inline' to default-src
-        -->
         <meta name="format-detection" content="telephone=no">
         <meta name="msapplication-tap-highlight" content="no">
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self' my-server-url.ss.yy.com:8080  data: gap: https://ssl.gstatic.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; connect-src *">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://wwww.mmpp.org  data: gap: https://ssl.gstatic.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; connect-src *;img-src *;">
+        <meta http-equiv="Content-Security-Policy" content="img-src 'self' http://ecx.images-amazon.com https://*.ssl-images-amazon.com data: gap: https://ssl.gstatic.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; connect-src *; img-src *;">
+
         <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <link rel="stylesheet" type="text/css" href="css/pagebar.css" />
+
+        <link rel="stylesheet" type="text/css" href="css/bookshelf_slider.css" />
+        <link rel="stylesheet" type="text/css" href="css/skin01.css" />
+
+
         <script type="text/javascript" src="js/jquery-3.1.1.min.js"></script>
+
+
         <script type="text/javascript">
+        var page = 1;
+        var BOOK_OF_PAGE = 7 * 8;
+        var total_page = 1;
+        var cacheBooks = new Array();
           $(document).ready(function() {
-              $("#inputTable input[name=isbn]").on('keydown',function(key){
-              	if(key.keyCode != 13) return;
-              	$("#inputTable #scan").click();
+            $.getJSON("http://www.mmpp.org/service/bookdb/select_book.json", function( data ) {
+              $.each( data.RESULT, function(i, item ) {
+                cacheBooks.push(item);
+                if(i <= BOOK_OF_PAGE )
+                  appendInformation( item.barcode,item.amazon_id,item.title,item.author,item.amazon_image);
               });
-              $("#inputTable #scan").on('click',function(){
-              	onScan();
-              });
-              $("#inputTable input[name=isbn]").on('chenge',function(){
-                if($("#inputTable input[name=isbn]").val().length != 13 ) return false;
-                onScan();
-              });
+                total_page = Math.ceil(cacheBooks.length / BOOK_OF_PAGE);
+                jumpToPage(1);
+            });
+            $("#nextPage").on("click",function(){
+                jumpToPage(++page);
+            });
+            $("#prePage").on("click",function(){
+                jumpToPage(--page);
+            });
           });
+          $(document).on("click","#jumpPage", function() {
+            var itempage = $(this).attr("page");
+            if($(this).attr("selected"))return;
+            jumpToPage(itempage);
+          });
+          function refleshPageBar(page){
+            if($("#pagebar").html()==""){
+              for(var i = 1 ; i <= total_page;i++){
+                var html ="";
+                html += "<a id='jumpPage'";
+                html += " page='" + i + "' ";
+                html += ">"+i;
+                html += "</a>";
 
-          function onScan(){
-          	code = $("#inputTable input[name=isbn]").val();
-            code = code.replace(/[！-～]/g,
-              function( tmpStr ) {
-                // 文字コードをシフト
-                return String.fromCharCode( tmpStr.charCodeAt(0) - 0xFEE0 );
+
+                $("#pagebar").append(html);
               }
-            );
-
-            // 入力リセット
-            $("#inputTable input[name=isbn]").val("");
-
-            // 例外処理
-            if(code.length == 0)return false;
-
-            console.log("input : " + code);
-            // 長さチェック
-            // 10か13以外はエラー
-            if(code.length != 10 && code.length != 13){
-              appendBookFail(code);
-              return false;
-            }
-            // チェックサム
-            if(!isChecksum(code)){
-              // コード例外処理
-              appendBookFail(code);
-              return false;
             }
 
-            $.getJSON('http://www.mmpp.org/service/aws_ecs/item_lookup.json?',
-              {
-                isbn: code
+            // 現在のページに印を入れる。
+            $("#pagebar").children().each(function (i,pageitem){
+              // リセット
+              $(pageitem).removeAttr("selected");
+              if(page == i + 1){
+                $(pageitem).attr("selected",'selected');
               }
-            )
-            .done(function(data) {
-              if(data.IsValid != "TRUE"){
-                appendBookFail(code);
-                return ;
-              }
-
-              // スキャン結果をテーブルに追加
-              appendBookInformation(code,data.RESULT.asin,data.RESULT.title,data.RESULT.authors[0].author);
             });
           }
-          function isChecksum(code){
-            return true;
-          }
-          function appendBookFail(isbn){
-            appendInformation(isbn,"","","","fail");
-          }
-          function appendBookInformation(isbn,asin,title,author){
-            appendInformation(isbn,asin,title,author,"true");
-          }
-          function appendInformation(isbn,asin,title,author,trid){
-            var date = new Date();
+          function appendInformation(isbn,asin,title,author,imgsrc){
             var html = "";
-            html += "<tr id='" + trid + "'>";
-            html += "<td>";
-            html += date.toLocaleDateString() + " " + date.toLocaleTimeString();
-            html += "</td>";
-            html += "<td>";
-            html += isbn;
-            html += "</td>";
-            html += "<td>";
-            html += asin;
-            html += "</td>";
-            html += "<td>";
-            html += title;
-            html += "</td>";
-            html += "<td>";
-            html += author;
-            html += "</td>";
-            html += "</tr>";
+            html += "<div class='product' data-type='book' data-popup='false' style='text-aligin:center;' ";
+            html += " ";
+            html += "title='" + title + "'>";
+            if(imgsrc != null){
+              html += "<img src='"+imgsrc + "' " + "alt='" + title + "' style='width:80px;height:108px;' />";
+            }
+            html += "</div>";
 
-            $("#myTable tbody").append(html);
+            $(".products_box#products_box_1").append(html);
+          }
+          function jumpToPage(page){
+            // 本棚初期化
+            $(".products_box#products_box_1").html("");
+            for( i = BOOK_OF_PAGE * (page - 1) ; i < BOOK_OF_PAGE * page ; i ++){
+              var item = cacheBooks[i];
+              if(item!=null)
+                appendInformation( item.barcode,item.amazon_id,item.title,item.author,item.amazon_image);
+            }
+            // ページナビナビゲーション初期化
+            $("#pagepre").show();
+            $("#pagenext").show()
+            if(page <= 1){
+              $("#pagepre").hide();
+            }
+            if(page >= total_page){
+              $("#pagenext").hide();
+            }
+            refleshPageBar(page);
           }
         </script>
         <style>
-          table#myTable{
-            font-size: 12px;
-            background-color: #4D4D4D;
-            width: 1024px;
-            border: 1px solid #000;
-          }
-          table#myTable tbody{
-            display: table-row-group;
-            vertical-align: middle;
-            border-color: inherit;
-          }
-          table#myTable thead{
-            display: table-header-group;
-            vertical-align: middle;
-            border-color: inherit;
-          }
-          table#myTable tr#fail{
-            background-color:#ffeeee;
-          }
-          table#myTable tr{
-            color:#000000;
-          }
-          table#myTable tr#true{
-            background-color:#eeffee;
-          }
-
-          table.tablesorter th{
-            padding: 5px;
-            background-color: #6E6E6E;
-          }
-          table.tablesorter {
-            font-size: 12px;
-            background-color: #4D4D4D;
-            width: 1024px;
-            border: 1px solid #000;
-        }
-
 
         </style>
-        <title>書庫管理システム 入力</title>
+        <title>書庫管理システム 一覧</title>
     </head>
     <body>
-        <!-- <div class="app">
-            <h1>Apache Cordova</h1>
-            <div id="deviceready" class="blink">
-                <p class="event listening">Connecting to Device</p>
-                <p class="event received">Device is Ready</p>
+
+      <div id="bookshelf_slider" style="width: 1000px;height:800px;align:center;">
+        <div class="panel_title" >
+        </div>
+        <div class="panel_slider">
+        	<div class="panel_items">
+            <div class='slide_animate'>
+              <div class="products_box" id="products_box_1"></div>
             </div>
-        </div> -->
-        <table id="inputTable" class="tablesorter">
-          <tr>
-              <th style="width : 15em" ><input name="isbn" type="text" maxlength="13" style="width : 15em" /></th>
-              <th><input id="scan" type="button" value="Scan" /></th>
-              <th style="text-align: right;">バーコードスキャンシステム ver 0.01</th>
-          </tr>
-		</table>
-        <table id="myTable" class="tablesorter">
-          <thead>
-          <tr>
-            <th>作業日時</th>
-            <th>ISBN</th>
-            <th>ASIN</th>
-            <th>タイトル</th>
-            <th>著者</th>
-          </tr>
-          </thead>
-          <tbody>
-          </tbody>
-          </table>
+          </div><!-- panel_items -->
+        </div><!-- panel_slider -->
+
+        <div class="panel_bar" >
+            	<div class="buttons_container" style="width: 65%;margin-top:5px;">
+                <span id="pagepre" >
+                  <a id="prePage" >前のページ</a>
+                </span>
+                <span id="pagebar"></span>
+                <span id="pagenext">
+                  <a id="nextPage">次のページ</a>
+                </span>
+              </div>
+      </div>
+    </div><!-- bookshelf_slider -->
 
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
