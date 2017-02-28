@@ -17,6 +17,7 @@
 
 
         <script type="text/javascript" src="js/jquery-3.1.1.min.js"></script>
+        <script type="text/javascript" src="js/shelf.js"></script>
 
 
         <script type="text/javascript">
@@ -35,10 +36,10 @@
                 jumpToPage(1);
             });
             $("#nextPage").on("click",function(){
-                jumpToPage(++page);
+              nextPage();
             });
             $("#prePage").on("click",function(){
-                jumpToPage(--page);
+                prePage();
             });
           });
           $(document).on("click","#jumpPage", function() {
@@ -46,60 +47,38 @@
             if($(this).attr("selected"))return;
             jumpToPage(itempage);
           });
-          function refleshPageBar(page){
-            if($("#pagebar").html()==""){
-              for(var i = 1 ; i <= total_page;i++){
-                var html ="";
-                html += "<a id='jumpPage'";
-                html += " page='" + i + "' ";
-                html += ">"+i;
-                html += "</a>";
+        </script>
+        <script>
+        // Swipe
+        $(document).ready(function() {
 
+          $("#bookshelf_slider").bind("touchstart", TouchStart);
+          $("#bookshelf_slider").bind("mousedown", TouchStart);
+          $("#bookshelf_slider").bind("touchend", TouchEnd);
+          $("#bookshelf_slider").bind("mouseup", TouchEnd);
 
-                $("#pagebar").append(html);
-              }
-            }
+        });
+        function TouchStart( event ) {
+          var x = event.pageX;
+          xtouchPositionX = (x == undefined )?event.changedTouches[0].pageX:x;
+          $("#bookshelf_slider").data("postionx",xtouchPositionX);
+        }
+        function TouchEnd( event ) {
+          var x = event.pageX;
+          x = (x == undefined )?event.changedTouches[0].pageX:x;
+          touchPositionX = $("#bookshelf_slider").data("postionx");
 
-            // 現在のページに印を入れる。
-            $("#pagebar").children().each(function (i,pageitem){
-              // リセット
-              $(pageitem).removeAttr("selected");
-              if(page == i + 1){
-                $(pageitem).attr("selected",'selected');
-              }
-            });
+          var movePixcel = touchPositionX - x;
+          $("#bookshelf_slider").data("postionx",-1);
+
+          // どれだけ動いたか
+          if(Math.abs(movePixcel) < 150)return ;
+          if(movePixcel > 0){
+            return nextPage();
+          }else{
+            return prePage();
           }
-          function appendInformation(isbn,asin,title,author,imgsrc){
-            var html = "";
-            html += "<div class='product' data-type='book' data-popup='false' style='text-aligin:center;' ";
-            html += " ";
-            html += "title='" + title + "'>";
-            if(imgsrc != null){
-              html += "<img src='"+imgsrc + "' " + "alt='" + title + "' style='width:80px;height:108px;' />";
-            }
-            html += "</div>";
-
-            $(".products_box#products_box_1").append(html);
-          }
-          function jumpToPage(page){
-            // 本棚初期化
-            $(".products_box#products_box_1").html("");
-            for( i = BOOK_OF_PAGE * (page - 1) ; i < BOOK_OF_PAGE * page ; i ++){
-              var item = cacheBooks[i];
-              if(item!=null)
-                appendInformation( item.barcode,item.amazon_id,item.title,item.author,item.amazon_image);
-            }
-            // ページナビナビゲーション初期化
-            $("#pagepre").show();
-            $("#pagenext").show()
-            if(page <= 1){
-              $("#pagepre").hide();
-            }
-            if(page >= total_page){
-              $("#pagenext").hide();
-            }
-            refleshPageBar(page);
-          }
+        }
         </script>
         <style>
 
