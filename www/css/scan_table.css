@@ -1,0 +1,41 @@
+
+  table#myTable{
+    font-size: 12px;
+    background-color: #4D4D4D;
+    width: 1024px;
+    border: 1px solid #000;
+  }
+  table#myTable tbody{
+    display: table-row-group;
+    vertical-align: middle;
+    border-color: inherit;
+  }
+  table#myTable thead{
+    display: table-header-group;
+    vertical-align: middle;
+    border-color: inherit;
+    color : white;
+  }
+  table#myTable thead th{
+    color : white;
+  }
+  table#myTable tr#fail{
+    background-color:#ffeeee;
+  }
+  table#myTable tr{
+    color:#000000;
+  }
+  table#myTable tr#true{
+    background-color:#eeffee;
+  }
+
+  table.tablesorter th{
+    padding: 5px;
+    background-color: #6E6E6E;
+  }
+  table.tablesorter {
+    font-size: 12px;
+    background-color: #4D4D4D;
+    width: 1024px;
+    border: 1px solid #000;
+}

@@ -4,175 +4,33 @@
         <meta name="format-detection" content="telephone=no">
         <meta name="msapplication-tap-highlight" content="no">
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; connect-src *;img-src : *;">
         <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <link rel="stylesheet" type="text/css" href="css/scan_table.css" />
+
         <script type="text/javascript" src="js/jquery-3.1.1.min.js"></script>
-        <script type="text/javascript">
-          $(document).ready(function() {
-              $("#inputTable input[name=isbn]").on('keydown',function(key){
-              	if(key.keyCode != 13) return;
-              	$("#inputTable #scan").click();
-              });
-              $("#inputTable #scan").on('click',function(){
-              	onScan();
-              });
-              $("#inputTable input[name=isbn]").on('chenge',function(){
-                if($("#inputTable input[name=isbn]").val().length != 13 ) return false;
-                onScan();
-              });
-          });
-
-          function onScan(){
-          	code = $("#inputTable input[name=isbn]").val();
-            code = code.replace(/[！-～]/g,
-              function( tmpStr ) {
-                // 文字コードをシフト
-                return String.fromCharCode( tmpStr.charCodeAt(0) - 0xFEE0 );
-              }
-            );
-
-            // 入力リセット
-            $("#inputTable input[name=isbn]").val("");
-
-            // 例外処理
-            if(code.length == 0)return false;
-
-            console.log("input : " + code);
-            // 長さチェック
-            // 10か13以外はエラー
-            if(code.length != 10 && code.length != 13){
-              appendBookFail(code);
-              return false;
-            }
-            // チェックサム
-            if(!isChecksum(code)){
-              // コード例外処理
-              appendBookFail(code);
-              return false;
-            }
-
-            $.getJSON('http://www.mmpp.org/service/aws_ecs/item_lookup.json?',
-              {
-                isbn: code
-              }
-            )
-            .done(function(data) {
-
-              if(data.IsValid != "TRUE"){
-                appendBookFail(code);
-                return ;
-              }
-
-              // スキャン結果をテーブルに追加
-              appendBookInformation(code,data.RESULT.asin,data.RESULT.title,data.RESULT.authors[0].author,data.RESULT.image_url);
-            });
-          }
-          function isChecksum(code){
-            return true;
-          }
-          function appendBookFail(isbn){
-            appendInformation(isbn,"","","","fail");
-          }
-          function appendBookInformation(isbn,asin,title,author,imgsrc){
-            appendInformation(isbn,asin,title,author,"true",imgsrc);
-          }
-          function appendInformation(isbn,asin,title,author,trid,imgsrc){
-            var date = new Date();
-            var html = "";
-            html += "<tr id='" + trid + "'>";
-            html += "<td>";
-
-              if(imgsrc != undefined){
-                html +=  "<img src=";
-                html += "'" + imgsrc + "'";
-                html += " />";
-              }
-            html += "</td>";
-            html += "<td >";
-              html += date.toLocaleDateString() + " " + date.toLocaleTimeString();
-            html += "</td>";
-            html += "<td>";
-              html += isbn;
-            html += "</td>";
-            html += "<td>";
-              html += asin;
-            html += "</td>";
-            html += "<td>";
-              html += title;
-            html += "</td>";
-            html += "<td>";
-              html += author;
-            html += "</td>";
-            html += "</tr>";
-
-            $("#myTable tbody").append(html);
-          }
-        </script>
-        <style>
-          table#myTable{
-            font-size: 12px;
-            background-color: #4D4D4D;
-            width: 1024px;
-            border: 1px solid #000;
-          }
-          table#myTable tbody{
-            display: table-row-group;
-            vertical-align: middle;
-            border-color: inherit;
-          }
-          table#myTable thead{
-            display: table-header-group;
-            vertical-align: middle;
-            border-color: inherit;
-            color : white;
-          }
-          table#myTable thead th{
-            color : white;
-          }
-          table#myTable tr#fail{
-            background-color:#ffeeee;
-          }
-          table#myTable tr{
-            color:#000000;
-          }
-          table#myTable tr#true{
-            background-color:#eeffee;
-          }
-
-          table.tablesorter th{
-            padding: 5px;
-            background-color: #6E6E6E;
-          }
-          table.tablesorter {
-            font-size: 12px;
-            background-color: #4D4D4D;
-            width: 1024px;
-            border: 1px solid #000;
-        }
-
-
-        </style>
+        <script type="text/javascript" src="js/scan.js"></script>
         <title>書庫管理システム 入力</title>
     </head>
     <body>
-        <!-- <div class="app">
-            <h1>Apache Cordova</h1>
-            <div id="deviceready" class="blink">
-                <p class="event listening">Connecting to Device</p>
-                <p class="event received">Device is Ready</p>
-            </div>
-        </div> -->
+      <br />
         <table id="inputTable" class="tablesorter">
           <tr>
-              <th style="width : 15em" ><input name="isbn" type="text" maxlength="13" style="width : 15em" /></th>
-              <th><input id="scan" type="button" value="Scan" /></th>
-              <th style="text-align: right;">バーコードスキャンシステム ver 0.01</th>
+            <th colspan="2" style="text-align: right;color:white;">バーコードスキャンシステム ver 0.01</th>
+          </tr>
+          <tr>
+            <th style="width : 30px;background-color:#555555;" ></th>
+            <td style="width : 900px;" >
+              <span style="text-aligin:left;">
+                <input name="isbn" type="text" style="width : 20em;margin-right:1em;" />
+                <input id="scan" type="button" value="Scan" />
+              </span>
+            </td>
           </tr>
 		</table>
-        <table id="myTable" class="tablesorter">
+        <table id="myTable" class="tablesorter" style="margin-top:10px;">
           <thead>
           <tr>
-            <th>表紙</th>
+            <th style="width:100px">表紙</th>
             <th>作業日時</th>
             <th>ISBN</th>
             <th>ASIN</th>
@@ -180,8 +38,16 @@
             <th>著者</th>
           </tr>
           </thead>
-          <tbody>
+          <tbody >
           </tbody>
+          <tfoot >
+            <tr>
+              <th colspan="6" style="background-color:#bbb;"></th>
+            </tr>
+            <tr>
+              <th colspan="6" ><input type="button" value="コミット" id="commit" /></th>
+            </tr>
+          </tfoot>
           </table>
 
         <script type="text/javascript" src="cordova.js"></script>
