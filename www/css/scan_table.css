@@ -25,8 +25,8 @@
   table#myTable tr{
     color:#000000;
   }
-  table#myTable tr#true{
-    background-color:#eeffee;
+  table#myTable tr{
+    background-color:#eeeeee;
   }
 
   table.tablesorter th{
@@ -38,4 +38,10 @@
     background-color: #4D4D4D;
     width: 1024px;
     border: 1px solid #000;
-}
+  }
+  table#bookform td{
+    background-color: #ffffff;
+  }
+  table#bookform th{
+    color: #ffffff;
+  }
